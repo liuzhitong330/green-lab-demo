@@ -204,32 +204,35 @@ REGION_COLORS = {
     "Olfact_bulb": "#7f8c8d",
 }
 
+LABEL_OFFSETS = {
+    # (lx_off, ly_off, text-anchor)  — tuned to avoid cluster overlap
+    "Isocortex":    ( 28, -14, "start"),
+    "Hippocampus":  (-28,   5, "end"),
+    "Cerebellum":   (  0,  38, "middle"),
+    "Striatum":     (-31, -14, "end"),
+    "Hypothalamus": ( 31,  20, "start"),
+    "Midbrain":     (-34,   5, "end"),
+    "Thalamus":     ( 31, -15, "start"),
+    "Olfact_bulb":  (  0,  38, "middle"),
+}
+
 dots = ""
 labels = ""
 for i, region in enumerate(STRUCTURES):
     cx = PAD_L + (chrm1[i] - min_x) / (max_x - min_x) * AW
     cy = PAD_T + AH - (olig2[i] - min_y) / (max_y - min_y) * AH
-    # dot size = plp1 value (10–28 px radius)
     r_dot = 10 + plp1[i] / max(plp1) * 18
     col = REGION_COLORS.get(region, "#888")
 
     dots += (f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_dot:.1f}" '
              f'fill="{col}" opacity="0.82" stroke="white" stroke-width="1.5"/>')
-
-    # label placement (offset to avoid overlap)
-    lx_off = r_dot + 5
-    ly_off = 4
-    if region == "Hippocampus": lx_off = -r_dot - 5; ly_off = 4
-    if region == "Isocortex":   lx_off = r_dot + 5;  ly_off = -8
-    if region == "Striatum":    lx_off = -r_dot - 5; ly_off = 4
-    if region == "Cerebellum":  lx_off = r_dot + 5;  ly_off = 4
-    ta = "start" if lx_off > 0 else "end"
-    lbl = region.replace("Olfact_bulb","Olf. bulb")
-    labels += (f'<text x="{cx+lx_off:.1f}" y="{cy+ly_off:.1f}" '
-               f'text-anchor="{ta}" font-size="10" fill="{col}" font-weight="600">{lbl}</text>')
-    # plp1 value annotation inside dot
     dots += (f'<text x="{cx:.1f}" y="{cy+4:.1f}" text-anchor="middle" '
              f'font-size="8" fill="white" font-weight="600">{plp1[i]:.0f}</text>')
+
+    lx, ly, ta = LABEL_OFFSETS.get(region, (28, 5, "start"))
+    lbl = region.replace("Olfact_bulb", "Olf. bulb")
+    labels += (f'<text x="{cx+lx:.1f}" y="{cy+ly:.1f}" '
+               f'text-anchor="{ta}" font-size="10" fill="{col}" font-weight="600">{lbl}</text>')
 
 # Axes
 ax_lines = (
@@ -252,25 +255,29 @@ for val in [0, 4, 8, 12, 16]:
     y_ticks += (f'<line x1="{PAD_L-5}" y1="{ty:.1f}" x2="{PAD_L}" y2="{ty:.1f}" stroke="#999" stroke-width="1"/>'
                 f'<text x="{PAD_L-8}" y="{ty+4:.1f}" text-anchor="end" font-size="9" fill="#666">{val}</text>')
 
-# Quadrant annotation
-q_x = PAD_L + AW * 0.72
-q_y = PAD_T + AH * 0.12
-quadrant_note = (
-    f'<rect x="{q_x-4}" y="{q_y-14}" width="160" height="40" rx="4" '
-    f'fill="#fff8f0" stroke="#e67e22" stroke-width="1" opacity="0.9"/>'
-    f'<text x="{q_x+2}" y="{q_y}" font-size="9" fill="#c0392b" font-weight="600">'
-    f'High OL density + High M1 brake</text>'
-    f'<text x="{q_x+2}" y="{q_y+13}" font-size="9" fill="#c0392b">'
-    f'→ most leverage for M1 antagonism</text>'
-)
-
-# Legend for dot size
+# Legend + annotation in the right-side column (keeps chart area clean)
 leg_x = FW2 - PAD_R + 15
 leg_y = PAD_T + 10
 legend = (
     f'<text x="{leg_x}" y="{leg_y}" font-size="9.5" fill="#444" font-weight="600">Dot size = Plp1</text>'
     f'<text x="{leg_x}" y="{leg_y+13}" font-size="9" fill="#666">(mature myelin level)</text>'
     f'<text x="{leg_x}" y="{leg_y+26}" font-size="9" fill="#666">value shown inside dot</text>'
+)
+
+# Annotation box — placed in legend column below dot-size legend
+q_x = leg_x
+q_y = leg_y + 60
+quadrant_note = (
+    f'<rect x="{q_x-4}" y="{q_y-14}" width="155" height="54" rx="4" '
+    f'fill="#fff5f5" stroke="#c0392b" stroke-width="1"/>'
+    f'<text x="{q_x+2}" y="{q_y}" font-size="9" fill="#c0392b" font-weight="600">'
+    f'Upper-right quadrant:</text>'
+    f'<text x="{q_x+2}" y="{q_y+13}" font-size="9" fill="#c0392b">'
+    f'High OL density +</text>'
+    f'<text x="{q_x+2}" y="{q_y+26}" font-size="9" fill="#c0392b">'
+    f'High M1 brake</text>'
+    f'<text x="{q_x+2}" y="{q_y+39}" font-size="9" fill="#c0392b">'
+    f'→ most M1 antagonist leverage</text>'
 )
 
 svg2 = f"""<svg viewBox="0 0 {FW2} {FH2}" xmlns="http://www.w3.org/2000/svg"
