@@ -171,27 +171,25 @@ print("Wrote muscarinic_heatmap.svg")
 
 
 # ── Figure 2: M1 brake vs OL density scatter ─────────────────────────────────
-# X = Chrm1 (M1 brake on OPC differentiation)
-# Y = Olig2 (OL lineage density)
-# Dot size = Plp1 (mature myelin — how differentiated OLs already are)
-# Color = Plp1 value (warm = already myelinated, cool = less)
+# Wider canvas + uniform small dots + leader lines eliminates all overlaps.
+# Plp1 (mature myelin) shown as value inside each dot.
 
-FW2, FH2 = 620, 480
-PAD_L = 75
-PAD_B = 70
+FW2, FH2 = 800, 500
+PAD_L = 80
+PAD_B = 65
 PAD_T = 90
-PAD_R = 180
-AW = FW2 - PAD_L - PAD_R
-AH = FH2 - PAD_T - PAD_B
+PAD_R = 42
+AW = FW2 - PAD_L - PAD_R   # 678
+AH = FH2 - PAD_T - PAD_B   # 345
 
 chrm1 = rows_by_gene["Chrm1"]
 olig2 = rows_by_gene["Olig2"]
 plp1  = rows_by_gene["Plp1"]
 
-max_x = max(chrm1) * 1.12
-max_y = max(olig2) * 1.12
-min_x = 0
-min_y = 0
+max_x = max(chrm1) * 1.12   # ~18.4
+max_y = max(olig2) * 1.12   # ~19.2
+
+R_DOT = 9  # uniform radius — keeps dots from overlapping in clustered region
 
 REGION_COLORS = {
     "Isocortex":   "#a93226",
@@ -204,35 +202,56 @@ REGION_COLORS = {
     "Olfact_bulb": "#7f8c8d",
 }
 
-LABEL_OFFSETS = {
-    # (lx_off, ly_off, text-anchor)  — tuned to avoid cluster overlap
-    "Isocortex":    ( 28, -14, "start"),
-    "Hippocampus":  (-28,   5, "end"),
-    "Cerebellum":   (  0,  38, "middle"),
-    "Striatum":     (-31, -14, "end"),
-    "Hypothalamus": ( 31,  20, "start"),
-    "Midbrain":     (-34,   5, "end"),
-    "Thalamus":     ( 31, -15, "start"),
-    "Olfact_bulb":  (  0,  38, "middle"),
+# Pre-compute dot centres
+pos = {}
+for i, region in enumerate(STRUCTURES):
+    cx = PAD_L + chrm1[i] / max_x * AW
+    cy = PAD_T + AH - olig2[i] / max_y * AH
+    pos[region] = (cx, cy)
+
+# Label anchor positions — manually chosen so no label overlaps any dot or other label.
+# Format: (lx, ly, text-anchor)
+LABEL_ABS = {
+    "Isocortex":    (pos["Isocortex"][0],         pos["Isocortex"][1]   - 22, "middle"),
+    "Hippocampus":  (pos["Hippocampus"][0] - 14,  pos["Hippocampus"][1] + 22, "middle"),
+    "Cerebellum":   (pos["Cerebellum"][0],         pos["Cerebellum"][1]  + 26, "middle"),
+    "Striatum":     (pos["Striatum"][0]    - 14,   pos["Striatum"][1]    - 22, "middle"),
+    "Hypothalamus": (pos["Hypothalamus"][0] + 60,  pos["Hypothalamus"][1],     "start"),
+    "Midbrain":     (pos["Midbrain"][0]    - 52,   pos["Midbrain"][1],         "end"),
+    "Thalamus":     (pos["Thalamus"][0]    + 52,   pos["Thalamus"][1]    - 10, "start"),
+    "Olfact_bulb":  (pos["Olfact_bulb"][0],        pos["Olfact_bulb"][1] + 26, "middle"),
 }
 
+leader_lines = ""
 dots = ""
 labels = ""
+
 for i, region in enumerate(STRUCTURES):
-    cx = PAD_L + (chrm1[i] - min_x) / (max_x - min_x) * AW
-    cy = PAD_T + AH - (olig2[i] - min_y) / (max_y - min_y) * AH
-    r_dot = 10 + plp1[i] / max(plp1) * 18
+    cx, cy = pos[region]
     col = REGION_COLORS.get(region, "#888")
+    lx, ly, ta = LABEL_ABS[region]
 
-    dots += (f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_dot:.1f}" '
-             f'fill="{col}" opacity="0.82" stroke="white" stroke-width="1.5"/>')
-    dots += (f'<text x="{cx:.1f}" y="{cy+4:.1f}" text-anchor="middle" '
-             f'font-size="8" fill="white" font-weight="600">{plp1[i]:.0f}</text>')
+    # Leader line from dot edge toward label
+    import math
+    dx, dy = lx - cx, ly - cy
+    dist = math.hypot(dx, dy)
+    if dist > 0:
+        ex = cx + dx / dist * R_DOT       # line starts at dot edge
+        ey = cy + dy / dist * R_DOT
+        ex2 = lx - dx / dist * 4          # line ends just before label
+        ey2 = ly - dy / dist * 4
+        leader_lines += (f'<line x1="{ex:.1f}" y1="{ey:.1f}" '
+                         f'x2="{ex2:.1f}" y2="{ey2:.1f}" '
+                         f'stroke="{col}" stroke-width="0.8" opacity="0.5"/>')
 
-    lx, ly, ta = LABEL_OFFSETS.get(region, (28, 5, "start"))
+    dots += (f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R_DOT}" '
+             f'fill="{col}" opacity="0.88" stroke="white" stroke-width="1.5"/>')
+    dots += (f'<text x="{cx:.1f}" y="{cy+3.5:.1f}" text-anchor="middle" '
+             f'font-size="7.5" fill="white" font-weight="600">{plp1[i]:.0f}</text>')
+
     lbl = region.replace("Olfact_bulb", "Olf. bulb")
-    labels += (f'<text x="{cx+lx:.1f}" y="{cy+ly:.1f}" '
-               f'text-anchor="{ta}" font-size="10" fill="{col}" font-weight="600">{lbl}</text>')
+    labels += (f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{ta}" '
+               f'font-size="10" fill="{col}" font-weight="600">{lbl}</text>')
 
 # Axes
 ax_lines = (
@@ -240,7 +259,6 @@ ax_lines = (
     f'<line x1="{PAD_L}" y1="{PAD_T+AH}" x2="{PAD_L+AW}" y2="{PAD_T+AH}" stroke="#ccc" stroke-width="1"/>'
 )
 
-# Axis ticks and labels
 x_ticks = ""
 for val in [0, 4, 8, 12, 16]:
     if val > max_x: continue
@@ -255,29 +273,26 @@ for val in [0, 4, 8, 12, 16]:
     y_ticks += (f'<line x1="{PAD_L-5}" y1="{ty:.1f}" x2="{PAD_L}" y2="{ty:.1f}" stroke="#999" stroke-width="1"/>'
                 f'<text x="{PAD_L-8}" y="{ty+4:.1f}" text-anchor="end" font-size="9" fill="#666">{val}</text>')
 
-# Legend + annotation in the right-side column (keeps chart area clean)
-leg_x = FW2 - PAD_R + 15
-leg_y = PAD_T + 10
-legend = (
-    f'<text x="{leg_x}" y="{leg_y}" font-size="9.5" fill="#444" font-weight="600">Dot size = Plp1</text>'
-    f'<text x="{leg_x}" y="{leg_y+13}" font-size="9" fill="#666">(mature myelin level)</text>'
-    f'<text x="{leg_x}" y="{leg_y+26}" font-size="9" fill="#666">value shown inside dot</text>'
+# Annotation box — bottom-right of chart, clear of all dots
+qbx = PAD_L + AW * 0.55
+qby = PAD_T + AH * 0.82
+quadrant_note = (
+    f'<rect x="{qbx:.0f}" y="{qby:.0f}" width="168" height="44" rx="4" '
+    f'fill="#fff5f5" stroke="#c0392b" stroke-width="1"/>'
+    f'<text x="{qbx+6:.0f}" y="{qby+14:.0f}" font-size="9" fill="#c0392b" font-weight="600">'
+    f'Upper-right = high OL + high M1 brake</text>'
+    f'<text x="{qbx+6:.0f}" y="{qby+28:.0f}" font-size="9" fill="#c0392b">'
+    f'→ most leverage for M1 antagonism</text>'
 )
 
-# Annotation box — placed in legend column below dot-size legend
-q_x = leg_x
-q_y = leg_y + 60
-quadrant_note = (
-    f'<rect x="{q_x-4}" y="{q_y-14}" width="155" height="54" rx="4" '
-    f'fill="#fff5f5" stroke="#c0392b" stroke-width="1"/>'
-    f'<text x="{q_x+2}" y="{q_y}" font-size="9" fill="#c0392b" font-weight="600">'
-    f'Upper-right quadrant:</text>'
-    f'<text x="{q_x+2}" y="{q_y+13}" font-size="9" fill="#c0392b">'
-    f'High OL density +</text>'
-    f'<text x="{q_x+2}" y="{q_y+26}" font-size="9" fill="#c0392b">'
-    f'High M1 brake</text>'
-    f'<text x="{q_x+2}" y="{q_y+39}" font-size="9" fill="#c0392b">'
-    f'→ most M1 antagonist leverage</text>'
+# Legend: dot = uniform size, number inside = Plp1
+leg_x = PAD_L + 8
+leg_y = PAD_T + AH + 35
+legend = (
+    f'<circle cx="{leg_x+5}" cy="{leg_y-3}" r="6" fill="#888" opacity="0.8"/>'
+    f'<text x="{leg_x+5}" y="{leg_y}" text-anchor="middle" font-size="6" fill="white">22</text>'
+    f'<text x="{leg_x+15}" y="{leg_y}" font-size="9" fill="#666">'
+    f'Dot number = Plp1 expression (mature myelin level)</text>'
 )
 
 svg2 = f"""<svg viewBox="0 0 {FW2} {FH2}" xmlns="http://www.w3.org/2000/svg"
@@ -289,7 +304,7 @@ svg2 = f"""<svg viewBox="0 0 {FW2} {FH2}" xmlns="http://www.w3.org/2000/svg"
     X = Chrm1 (M1 receptor expression — higher = more brake on OPC differentiation)
   </text>
   <text x="{FW2//2}" y="52" text-anchor="middle" font-size="10" fill="#666">
-    Y = Olig2 (OL lineage density) · Dot size = Plp1 (mature myelin level, value in dot)
+    Y = Olig2 (OL lineage density) · Number in dot = Plp1 (mature myelin level)
   </text>
   <text x="{PAD_L+AW/2:.0f}" y="{PAD_T+AH+38}" text-anchor="middle" font-size="10" fill="#444">
     Chrm1 expression (ISH energy) — M1 receptor brake intensity
@@ -298,7 +313,7 @@ svg2 = f"""<svg viewBox="0 0 {FW2} {FH2}" xmlns="http://www.w3.org/2000/svg"
     text-anchor="middle" font-size="10" fill="#444">
     Olig2 expression — OL lineage density
   </text>
-  {ax_lines}{x_ticks}{y_ticks}{dots}{labels}{quadrant_note}{legend}
+  {ax_lines}{x_ticks}{y_ticks}{leader_lines}{dots}{labels}{quadrant_note}{legend}
 </svg>"""
 
 with open(OUT / "m1_opc_scatter.svg", "w") as f:
