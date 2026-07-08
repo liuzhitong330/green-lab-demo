@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>M1 Receptor Brake on OPC Differentiation — Cathy Liu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: Georgia, serif; max-width: 720px; margin: 0 auto;
+         padding: 2.5rem 1.5rem 4rem; line-height: 1.65; color: #222; background: #fff; }
+  h1, h2, h3 { font-family: -apple-system, system-ui, sans-serif; }
+  h1 { font-size: 1.45rem; margin-bottom: .2rem; }
+  .byline { font-family: system-ui, sans-serif; font-size: .85rem; color: #777; margin-bottom: 2rem; }
+  h2 { font-size: 1.1rem; margin-top: 2.5rem; border-bottom: 1px solid #eee; padding-bottom: .3rem; }
+  .note { background: #f6f6f4; border-left: 3px solid #999; padding: .8rem 1rem;
+          font-family: system-ui, sans-serif; font-size: .85rem; color: #444; margin: 1.2rem 0; }
+  figure { margin: 1.2rem 0; }
+  figure img { max-width: 100%; display: block; }
+  figcaption { font-family: system-ui, sans-serif; font-size: .78rem; color: #777; margin-top: .4rem; }
+  a { color: #2255aa; }
+  .meta { font-family: system-ui, sans-serif; font-size: .8rem; color: #888;
+          margin-top: 3rem; border-top: 1px solid #eee; padding-top: 1rem; }
+  .tag { display: inline-block; font-family: system-ui, sans-serif; font-size: .75rem;
+         background: #eef2f8; color: #2255aa; padding: .15rem .5rem;
+         border-radius: 3px; margin-right: .3rem; }
+  .highlight  { background: #fff5f5; border-left: 3px solid #c0392b; padding: .6rem 1rem;
+                font-family: system-ui, sans-serif; font-size: .88rem; margin: 1rem 0; }
+  .highlight2 { background: #f0f8ff; border-left: 3px solid #2980b9; padding: .6rem 1rem;
+                font-family: system-ui, sans-serif; font-size: .88rem; margin: 1rem 0; }
+  .highlight3 { background: #f5fff0; border-left: 3px solid #27ae60; padding: .6rem 1rem;
+                font-family: system-ui, sans-serif; font-size: .88rem; margin: 1rem 0; }
+</style>
+</head>
+<body>
+
+<h1>Where Is the M1 Receptor Brake on OPC Differentiation Strongest? A Brain-Region Map</h1>
+<div class="byline">Cathy Liu · cathyliu014@gmail.com · personal exploratory project, July 2026</div>
+
+<span class="tag">remyelination</span>
+<span class="tag">muscarinic M1 receptor</span>
+<span class="tag">OPC differentiation</span>
+<span class="tag">clemastine</span>
+<span class="tag">multiple sclerosis</span>
+<span class="tag">Allen Brain Atlas</span>
+<span class="tag">Python</span>
+
+<p style="margin-top:1.2rem">
+The <a href="https://greenlab.ucsf.edu/" target="_blank">Green lab</a> has pioneered the clinical
+translation of remyelinating therapies for multiple sclerosis, demonstrating that clemastine fumarate
+— originally an antihistamine — promotes myelin repair through oligodendrocyte differentiation.
+The mechanistic basis was established by
+<a href="https://www.pnas.org/doi/10.1073/pnas.2402002121" target="_blank">Poon et al. (PNAS 2024)</a>:
+the muscarinic M1 receptor acts as a differentiation brake on OPCs, and selective M1 antagonism
+releases this brake, allowing progenitors to mature into myelinating oligodendrocytes. This finding
+also explains why clemastine works — it has significant M1 antagonist activity alongside its
+antihistamine effects.
+</p>
+
+<p>
+A question I found myself thinking about after reading this work: <em>where in the brain is this
+M1 brake most active?</em> If M1 receptor expression in OPC-rich regions is high, those regions
+have more therapeutic leverage from M1 antagonism — but may also be doing less spontaneous
+remyelination, because their progenitors are under stronger tonic inhibition. Conversely, regions
+with high OL lineage density but low Chrm1 expression may be remyelinating more efficiently already.
+</p>
+
+<p>
+I mapped ISH expression of muscarinic receptor subtypes, OPC/OL lineage markers, and mature myelin
+genes across eight brain regions using the Allen Mouse Brain Atlas, and built a simple
+"therapeutic opportunity map" to visualize the relationship.
+</p>
+
+<div class="note">
+<strong>What this is.</strong> Personal exploratory analysis, not novel research.
+Data from the Allen Mouse Brain Atlas (Allen Institute for Brain Science, 2004),
+via the public RMA API. ISH expression energy is a bulk regional average and reflects
+the full mix of cell types in each region — it cannot isolate OPC-specific Chrm1 expression
+(which Poon et al. characterized at the protein level in human MS tissue). The analysis
+is intended as a framework for thinking about regional differences, not as a cell-type-resolved map.
+</div>
+
+<h2>Muscarinic subtypes and OL lineage markers across brain regions</h2>
+
+<figure>
+  <img src="muscarinic_heatmap.svg?v=1"
+       alt="Heatmap of muscarinic receptors, OPC lineage, and myelin genes across 8 brain regions">
+  <figcaption>ISH expression energy (row-normalized per gene) for 13 genes across 8 brain regions.
+  Isocortex (red highlight): Chrm1 and Olig2 both peak here. Hippocampus (blue): second-highest
+  co-expression of M1 + OL lineage. Mature myelin genes (Mbp, Plp1, Cnp) peak in midbrain —
+  the most myelinated region. Raw values annotated where expression is notably high.</figcaption>
+</figure>
+
+<div class="highlight">
+<strong>Chrm1 (M1) peaks in isocortex (16.4) and hippocampus (15.9) — the same regions where
+Olig2 (OL lineage density) is also highest (17.1 and 14.5).</strong>
+The co-localization of M1 expression and OL lineage cells in cortex and hippocampus is consistent
+with Poon et al.'s finding that M1 is expressed in oligodendroglial cells specifically.
+These two regions are also where cortical MS lesions and hippocampal atrophy are most clinically
+significant for cognitive outcomes — suggesting M1 antagonism may be most relevant precisely
+where cognitive morbidity is highest.
+</div>
+
+<div class="highlight2">
+<strong>Chrm4 (M4) peaks sharply in striatum (12.5) while Chrm1 is moderate there (13.1).</strong>
+The striatum has a different muscarinic subtype balance than cortex — M4 is the dominant subtype
+in medium spiny neurons. This means that in striatal MS lesions, M1-selective antagonism
+(as in Poon et al. 2024) would be less confounded by off-target M4 effects compared to earlier
+non-selective approaches. Subtype selectivity matters most in regions with mixed M1/M4 expression.
+</div>
+
+<div class="highlight3">
+<strong>Mature myelin genes (Mbp 11.9, Plp1 21.7, Cnp 10.5) all peak in midbrain, where
+Chrm1 is low (2.8).</strong>
+Midbrain has the highest myelin density but the lowest M1 brake — consistent with efficient
+ongoing remyelination or high mature OL turnover. Cerebellum shows a similar pattern (low
+Chrm1 = 2.1, high Plp1 = 14.0). This suggests that in regions where remyelination is already
+proceeding well, M1 tonic inhibition is minimal — perhaps because differentiating OLs
+downregulate Chrm1 as they mature.
+</div>
+
+<h2>Therapeutic opportunity map: M1 brake vs. OL lineage density</h2>
+
+<figure>
+  <img src="m1_opc_scatter.svg?v=1"
+       alt="Scatter plot of Chrm1 vs Olig2 per brain region, dot size = Plp1">
+  <figcaption>Each dot = one brain region. X-axis = Chrm1 expression (M1 brake intensity).
+  Y-axis = Olig2 (OL lineage cell density). Dot size = Plp1 (mature myelin level, value shown
+  inside dot). Upper-right quadrant (high OL density + high M1 brake) = regions where M1
+  antagonism has the most potential leverage. Isocortex and hippocampus occupy this quadrant.
+  Midbrain and cerebellum are lower-left: low M1 brake, high myelin — already efficient.</figcaption>
+</figure>
+
+<p>
+The scatter makes the regional pattern concrete:
+</p>
+<ul>
+<li>
+<strong>Isocortex and hippocampus sit in the upper-right quadrant</strong> — high OL lineage
+density, high M1 brake. These are the regions where M1 antagonism would remove the strongest
+inhibitory signal from the most OPCs. The lab's clinical trials (ReCOVER, ReVIVE) focus on
+optic neuritis and cortical demyelination — exactly this territory.
+</li>
+<li>
+<strong>Midbrain and cerebellum are lower-left</strong> — high mature myelin already, low
+M1 brake. These structures may be efficient remyelinators intrinsically, requiring less
+pharmacological intervention but also offering less drug effect.
+</li>
+<li>
+<strong>Striatum is middle-right</strong> — high M1 (13.1) but also very high Plp1 (18.6),
+suggesting the OL population there is already partially differentiated. The high Chrm4 (12.5)
+makes striatum a region where M1-selective vs. M4-selective effects can be dissociated.
+</li>
+</ul>
+
+<h2>Why this connects to the lab's work</h2>
+<ul>
+<li>
+<strong>Mechanistic screening (NIH R01NS095889 — GPCR library):</strong> The lab is screening
+GPCR compounds for remyelination activity. Understanding which brain regions have the highest
+Chrm1 co-expression with OL lineage markers provides a regional readout for where in vivo
+pharmacological validation would show the clearest signal. I'd like to contribute to the
+functional validation pipeline — both cell biology experiments characterizing OPC differentiation
+and computational analysis of expression or imaging data.
+</li>
+<li>
+<strong>VEP as a biomarker (NIH R01NS105741):</strong> The lab uses visual evoked potentials
+to measure remyelination in the optic nerve — a region not captured in this atlas analysis
+but directly analogous to the cortical OPC story (optic nerve OPCs also express M1). I'm
+interested in contributing to the quantitative analysis of VEP and OCT data as remyelination
+readouts, particularly in connecting the electrophysiological signal back to the underlying
+cellular mechanisms.
+</li>
+<li>
+My background spans molecular and cell biology wet lab skills and computational data analysis.
+I think my combination of practical lab experience and computational background is where I can
+be most useful to your lab.
+</li>
+</ul>
+
+<h2>Methods</h2>
+<p>
+Data retrieved July 2026. Allen Mouse Brain Atlas (Allen Institute for Brain Science, 2004),
+in situ hybridization, adult mouse (P56), via RMA API at
+<code>api.brain-map.org/api/v2/data/query.json</code>.
+Structures: Isocortex (315), Hippocampal formation (1089), Cerebellum (512),
+Striatum/Caudoputamen (672), Hypothalamus (1097), Midbrain (313), Thalamus (549),
+Olfactory bulb (507). Corpus callosum (776) excluded — ISH returns zero in fiber tracts (no cell bodies).
+Expression metric: <em>expression_energy</em> from StructureUnionize (sagittal ISH preferred).
+Figures: pure Python SVG. Code:
+<a href="fetch_data.py">fetch_data.py</a>, <a href="make_figures.py">make_figures.py</a>.
+Raw data: <a href="expression.tsv">expression.tsv</a>.
+</p>
+
+<div class="meta">
+Cathy Liu — cathyliu014@gmail.com | 415-216-3799<br>
+<a href="https://liuzhitong330.github.io/tvb-llm-robust-neurostim/" target="_blank">Epilepsy neurostimulation project</a> ·
+<a href="https://arxiv.org/abs/2606.04339" target="_blank">arXiv:2606.04339</a>
+</div>
+
+</body>
+</html>
